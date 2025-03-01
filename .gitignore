@@ -1,3 +1,4 @@
 .env
 poetry.lock
 logs
+__pycache__
