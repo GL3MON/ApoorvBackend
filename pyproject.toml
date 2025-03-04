@@ -13,7 +13,8 @@ dependencies = [
     "langchain-community (>=0.3.18,<0.4.0)",
     "langchain-google-genai (>=2.0.11,<3.0.0)",
     "langgraph (>=0.3.2,<0.4.0)",
-    "loguru (>=0.7.3,<0.8.0)"
+    "loguru (>=0.7.3,<0.8.0)",
+    "redis (>=5.2.1,<6.0.0)"
 ]
 
 
