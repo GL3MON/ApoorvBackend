@@ -2,17 +2,16 @@ from apoorvbackend.src.logger import logger
 import os
 
 
-def load_prompt(agent_name: str) -> str:
+def load_prompt(level: str, agent_name: str) -> str:
     '''
     Load the prompt from the given path.
     '''
-
     try:
-        with open(os.path.join('apoorvbackend/storage/prompts', agent_name, '.txt'), 'r') as file:
+        with open(os.path.join('apoorvbackend/storage/prompts', level, agent_name +'.txt'), 'r') as file:
             return file.read()
         
     except FileNotFoundError:
-        logger.info(f"Prompt not found for agent {agent_name}")
+        logger.error(f"Prompt not found for agent {agent_name}")
         return None
     
     except Exception as e:
