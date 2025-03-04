@@ -30,7 +30,7 @@
 
 ## LoadBalancer
 
-## How to Create an Object
+### How to Create an Object
 To use the `LoadBalancer` class, first import it and initialize an object:
 
 ```python
@@ -40,9 +40,9 @@ from load_balancer import LoadBalancer
 lb = LoadBalancer(n=10, ct=10)
 ```
 
-## Purpose of Each Method
+### Purpose of Each Method
 
-### `__init__(self, n, ct)`
+#### `__init__(self, n, ct)`
 - Initializes the load balancer with `n` API keys.
 - Loads API keys from environment variables.
 - Initializes tracking for failed keys and their cooldown times.
@@ -51,11 +51,11 @@ lb = LoadBalancer(n=10, ct=10)
   - `n`: Number of API keys.
   - `ct`: Cooldown time (in seconds) for failed keys.
 
-### `Round_Robin(self)`
+#### `Round_Robin(self)`
 - Implements a round-robin load balancing strategy.
 - Returns the next API key in sequence.
 
-### `FailureAware(self)` and `report_fail(self, key)`
+#### `FailureAware(self)` and `report_fail(self, key)`
 - `FailureAware` selects an API key while avoiding failed keys.
 - If a key has failed and is still in cooldown, it is skipped.
 - Raises an exception if all keys are in cooldown.
@@ -63,20 +63,20 @@ lb = LoadBalancer(n=10, ct=10)
 - **Parameter:**
   - `key`: The failed API key.
 
-### `StdDev(self)`
+#### `StdDev(self)`
 - Selects an API key based on a probability distribution using standard deviation.
 - Prioritizes keys that have been used less frequently.
 - Does **not** check for failed keys.
 
-## Usage of Each Method
+### Usage of Each Method
 
-### Example 1: Using Round Robin Load Balancing
+#### Example 1: Using Round Robin Load Balancing
 ```python
 key = lb.Round_Robin()
 print("Selected Key:", key)
 ```
 
-### Example 2: Using Failure-Aware Selection and Reporting Failure
+#### Example 2: Using Failure-Aware Selection and Reporting Failure
 ```python
 try:
     key = lb.FailureAware()
@@ -88,12 +88,12 @@ except Exception as e:
 lb.report_fail("API_KEY_1")
 ```
 
-### Example 3: Using Standard Deviation-Based Selection
+#### Example 3: Using Standard Deviation-Based Selection
 ```python
 key = lb.StdDev()
 print("Selected Key:", key)
 ```
-
+Further stress testing needs to be done in order to find out which algorithm can handle the traffic the best.
 
 
 ## How to Contribute
