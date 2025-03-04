@@ -30,8 +30,6 @@ class Handler:
                 "messages": self.chat_history
             }
         )
-
-        self.chat_history.append(response)
         
-        return self.chat_history
+        return response
     

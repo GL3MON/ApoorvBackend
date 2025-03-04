@@ -36,12 +36,13 @@ def chat_with_actor(chat_request: ChatRequest):
     prompt = PromptLoader.get_prompt_template(level, actor)
 
     chat_history.append(HumanMessage(content=user_input))
-    response_history = handler.get_response(user_input, prompt, chat_history)
+    response = handler.get_response(user_input, prompt, chat_history)
+    chat_history.append(response)
 
-    redis_handler.save_chat_history(user_id, level, actor, response_history)
+    redis_handler.save_chat_history(user_id, level, actor, chat_history)
 
-    logger.info(f"Response: {response_history[-1].content}")
-    return response_history[-1].content
+    logger.info(f"Response: {response.content}")
+    return response.content
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1")
