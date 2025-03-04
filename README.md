@@ -95,6 +95,21 @@ print("Selected Key:", key)
 ```
 Further stress testing needs to be done in order to find out which algorithm can handle the traffic the best.
 
+## .env File Format
+
+The `.env` file should be structured as follows:
+
+```
+GOOGLE_API_KEY_<n> = <your_gemini_api_key>
+```
+
+Replace `<n>` with the key index (e.g., `1, 2, 3,...`) and `<your_gemini_api_key>` with your actual Gemini API key.
+
+**Example:**
+```
+GOOGLE_API_KEY_1 = <your_gemini_api_key_1>
+GOOGLE_API_KEY_2 = <your_gemini_api_key_2>
+```
 
 ## How to Contribute
 
