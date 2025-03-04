@@ -1,42 +1,47 @@
-from apoorvbackend.src.logger import logger
-from apoorvbackend.src.llm_handler.handler import Handler as LLMHandler
-from apoorvbackend.src.prompt_loader.loader import PromptLoader
-from langchain_core.messages import AIMessage, HumanMessage
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 import uvicorn
 from dotenv import load_dotenv
 import os
+
+from apoorvbackend.src.logger import logger
+from apoorvbackend.src.llm_handler.handler import Handler as LLMHandler
+from apoorvbackend.src.models.chat_models import ChatRequest
+from apoorvbackend.src.prompt_loader.loader import PromptLoader
+from langchain_core.messages import AIMessage, HumanMessage
+from apoorvbackend.src.redis.redis_handlers import RedisChatHandler
 
 load_dotenv()
 
 app = FastAPI()
 
 handler = LLMHandler()
-
-global test_chat_history
-test_chat_history = [
-    HumanMessage(content="Hello, how are you?"),
-    AIMessage(content="I'm good, thank you! How can I assist you today?"),
-    HumanMessage(content="Can you tell me a joke?"),
-    AIMessage(content="Sure! Why don't scientists trust atoms? Because they make up everything!")
-]
+redis_handler = RedisChatHandler()  
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
-# TODO: Change it to POST Request.
-@app.get("/chat/")
-def chat_with_actor(level: str, actor: str, user_input: str):
-    global test_chat_history
-    logger.info(f"Chatting with actor {actor} at level {level}")
+@app.post("/chat/")
+def chat_with_actor(chat_request: ChatRequest):
+    user_id = chat_request.user_id
+    level = chat_request.level
+    actor = chat_request.actor
+    user_input = chat_request.user_input
+
+    logger.info(f"Chatting with actor {actor} at level {level} for user {user_id}")
+
+    chat_history = redis_handler.load_chat_history(user_id, level, actor)
+    chat_history = [] if chat_history is None else chat_history
+
     prompt = PromptLoader.get_prompt_template(level, actor)
-    response = handler.get_response(user_input, prompt, test_chat_history)
-    test_chat_history = response
 
-    logger.info(f"Response: {response[-1].content}")
+    chat_history.append(HumanMessage(content=user_input))
+    response_history = handler.get_response(user_input, prompt, chat_history)
 
-    return response[-1].content
+    redis_handler.save_chat_history(user_id, level, actor, response_history)
+
+    logger.info(f"Response: {response_history[-1].content}")
+    return response_history[-1].content
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1")
