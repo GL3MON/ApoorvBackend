@@ -41,7 +41,7 @@ def chat_with_actor(chat_request: ChatRequest):
 
     redis_handler.save_chat_history(user_id, level, actor, chat_history)
 
-    logger.info(f"Response: {response.content}")
+    logger.info(f"Response: {response.content} Flag: {response.additional_kwargs['flag']}")
     return response.content
 
 #Test Function

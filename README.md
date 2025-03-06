@@ -111,6 +111,9 @@ GOOGLE_API_KEY_1 = <your_gemini_api_key_1>
 GOOGLE_API_KEY_2 = <your_gemini_api_key_2>
 ```
 
+## Setting up Ollama
+- Add the host uri to the ```OLLAMA_BASE_URL```. See the existing url in the ```.env.template``` for example
+
 ## How to Contribute
 
 - **Don't commit code/changes directly to `main`.**

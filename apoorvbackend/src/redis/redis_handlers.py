@@ -27,11 +27,13 @@ class RedisChatHandler:
         """Convert a message object to a dict for JSON storage."""
         if isinstance(message, HumanMessage):
             role = "human"
+            return {"role": role, "content": message.content}
+        
         elif isinstance(message, AIMessage):
             role = "ai"
-        else:
+            return {"role": role, "content": message.content, "flag": message.additional_kwargs.get("flag", None)}
+        else:   
             raise ValueError("Invalid message type")
-        return {"role": role, "content": message.content}
 
     def deserialize_message(self, data: dict):
         """Convert dict data back to a message object."""
@@ -40,7 +42,7 @@ class RedisChatHandler:
         if role == "human":
             return HumanMessage(content=content)
         elif role == "ai":
-            return AIMessage(content=content)
+            return AIMessage(content=content, additional_kwargs={"flag": data.get("flag", None)})
         else:
             raise ValueError("Invalid message role")
 
