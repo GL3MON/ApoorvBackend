@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Query
 import uvicorn
 from dotenv import load_dotenv
-import os
 
 from apoorvbackend.src.logger import logger
 from apoorvbackend.src.llm_handler.handler import Handler as LLMHandler
