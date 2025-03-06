@@ -35,16 +35,24 @@ class LoadBalancer:
     
     def StdDev(self):
         avail_keys = self.keys
-        
-        use_counts = np.array([self.usage_count[key] for key in avail_keys])
+
+        max_usage = max(self.usage_count.values())
+
+        filtered_keys = [key for key in avail_keys if self.usage_count[key] < max_usage]
+
+        if not filtered_keys:
+            filtered_keys = avail_keys
+
+        use_counts = np.array([self.usage_count[key] for key in filtered_keys])
         mean_use = np.mean(use_counts)
         std_dev = np.std(use_counts) + 1e-6
 
         prob = 1 / (1 + np.abs(use_counts - mean_use) / std_dev)
         prob /= prob.sum()
 
-        sel_key = np.random.choice(avail_keys,p=prob)
+        sel_key = np.random.choice(filtered_keys, p=prob)
         self.usage_count[sel_key] += 1
 
         return sel_key
+
     
