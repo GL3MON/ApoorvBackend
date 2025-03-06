@@ -1,2 +1,7 @@
 python-dotenv==1.0.1
 numpy==1.26.4
+langchain-google-genai
+langchain-core
+loguru
+fastapi
+redis
