@@ -1,7 +1,7 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 import os
-from load_balancer import LoadBalancer
+from apoorvbackend.src.llm_handler.load_balancer import LoadBalancer
 
 load_dotenv()
 
@@ -21,6 +21,3 @@ class LLM:
         )
         
         return llm
-
-l = LLM()
-print(l.get_llm())

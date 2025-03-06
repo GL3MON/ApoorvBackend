@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Query
 import uvicorn
-from dotenv import load_dotenv
+from dotenv import load_dotenv  
 
 from apoorvbackend.src.logger import logger
 from apoorvbackend.src.llm_handler.handler import Handler as LLMHandler
+from apoorvbackend.src.llm_handler.llm import LLM
 from apoorvbackend.src.models.chat_models import ChatRequest
 from apoorvbackend.src.prompt_loader.loader import PromptLoader
 from langchain_core.messages import AIMessage, HumanMessage
@@ -40,6 +41,15 @@ def chat_with_actor(chat_request: ChatRequest):
 
     redis_handler.save_chat_history(user_id, level, actor, chat_history)
 
+    logger.info(f"Response: {response.content}")
+    return response.content
+
+#Test Function
+@app.post("/ask/")
+def ask(question : ChatRequest):
+    ques = question.user_input
+    llm = LLM.get_llm()
+    response = llm.invoke(ques)
     logger.info(f"Response: {response.content}")
     return response.content
 
