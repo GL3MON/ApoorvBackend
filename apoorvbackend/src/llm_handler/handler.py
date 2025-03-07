@@ -2,7 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain.schema import HumanMessage, SystemMessage, BaseMessage, AIMessage
-from langchain.chat_models import ChatOpenAI  # For Ollama
+from langchain.chat_models import ChatOpenAI 
 from apoorvbackend.src.llm_handler.llm import LLM
 from apoorvbackend.src.models.chat_models import LLMResponse
 from apoorvbackend.src.logger import logger
@@ -14,7 +14,7 @@ import requests
 class Handler:
 
     def __init__(self):
-        self.ollama_llm = LLM.get_ollama_llm()
+        self.llama_llm = LLM.get_llama_llm()
         self.gemini_llm = LLM.get_gemini_llm()
         self.prompt = None
         self.chat_history = None
@@ -31,9 +31,9 @@ class Handler:
         logger.info(f"Input: {user_input}")
 
         try:
-            # Try Ollama
-            logger.info("Trying Ollama")
-            self.chain = self._get_chain(prompt, self.ollama_llm)
+            # Try Llama
+            logger.info("Trying Llama")
+            self.chain = self._get_chain(prompt, self.llama_llm)
             response = self.chain.invoke(
                 {
                     "messages": self.chat_history
@@ -46,7 +46,7 @@ class Handler:
             # Fallback to Gemini
             try:
                 logger.info("Falling back to Gemini")
-                self.chain = self._get_chain(prompt, self.gemini_llm) # Pass Gemini LLM to the chain
+                self.chain = self._get_chain(prompt, self.gemini_llm) 
                 response = self.chain.invoke(
                     {
                         "messages": 
