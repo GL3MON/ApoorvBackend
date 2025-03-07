@@ -20,7 +20,7 @@ class LLM:
     @staticmethod
     def get_gemini_llm(temperature=0.5, timeout=10, max_retries=4):
         lb = LoadBalancer(n=1, ct=1)
-        key = lb.StdDev()
+        key = lb.get_key(method="round_robin")
         return ChatGoogleGenerativeAI(
             model=os.getenv("MODEL_NAME"),
             api_key=key,

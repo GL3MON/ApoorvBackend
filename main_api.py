@@ -57,7 +57,7 @@ def chat_with_actor(chat_request: ChatRequest):
 @app.post("/ask/")
 def ask(question : ChatRequest):
     ques = question.user_input
-    llm = LLM.get_llm()
+    llm = LLM.get_ollama_llm()
     response = llm.invoke(ques)
     logger.info(f"Response: {response.content}")
     return response.content
