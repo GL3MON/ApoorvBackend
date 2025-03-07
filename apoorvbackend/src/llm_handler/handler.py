@@ -47,7 +47,6 @@ class Handler:
             try:
                 logger.info("Falling back to Gemini")
                 self.chain = self._get_chain(prompt, self.gemini_llm) # Pass Gemini LLM to the chain
-                logger.info(self.chat_history)
                 response = self.chain.invoke(
                     {
                         "messages": 
