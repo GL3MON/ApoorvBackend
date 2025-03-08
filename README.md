@@ -28,6 +28,10 @@
   - **AOF:**  
     Enable AOF by setting `appendonly yes` and fine-tune the `appendfsync` policy as needed.
 
+
+## Postgres Logging
+- Update the .env file with postgres connection details
+
 ## LoadBalancer
 
 ### How to Create an Object
