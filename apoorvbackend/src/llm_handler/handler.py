@@ -31,6 +31,7 @@ class Handler:
         logger.info(f"Input: {user_input}")
 
         try:
+            #raise ValueError("On Purpose")
             # Try Llama
             logger.info("Trying Llama")
             self.chain = self._get_chain(prompt, self.llama_llm)

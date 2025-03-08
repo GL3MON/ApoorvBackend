@@ -16,7 +16,8 @@ class LLM:
             api_key=os.getenv("LLAMA_API_KEY"),
             temperature=temperature,
             base_url=os.getenv("LLAMA_BASE_URL"),
-            timeout=timeout
+            timeout=timeout,
+            max_tokens=100
         )
 
     @staticmethod
@@ -29,4 +30,5 @@ class LLM:
             temperature=temperature,
             timeout=timeout,
             max_retries=max_retries,
+            max_tokens=100
         )
