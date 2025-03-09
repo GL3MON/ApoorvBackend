@@ -13,11 +13,8 @@ load_dotenv()
 
 class PostgresBackupService:
     def __init__(self, interval_minutes=5):
-        self.host = os.getenv("POSTGRES_HOST")
-        self.port = os.getenv("POSTGRES_PORT", "5432")
-        self.user = os.getenv("POSTGRES_USER")
-        self.password = os.getenv("POSTGRES_PASSWORD")
-        self.database = os.getenv("POSTGRES_DB")
+        self.connection_string = os.getenv("DATABASE_URL")
+        
         self.interval_seconds = interval_minutes * 60
         self.redis_handler = RedisChatHandler()
         self.running = False
@@ -26,14 +23,8 @@ class PostgresBackupService:
         self._init_db()
     
     def _get_connection(self):
-        """Create and return a connection to the PostgreSQL database."""
-        return psycopg2.connect(
-            host=self.host,
-            port=self.port,
-            user=self.user,
-            password=self.password,
-            database=self.database
-        )
+        """Create and return a connection to the PostgreSQL database using the connection string."""
+        return psycopg2.connect(self.connection_string)
     
     def _init_db(self):
         """Initialize the database schema if it doesn't exist."""
@@ -90,44 +81,27 @@ class PostgresBackupService:
                     
                     chat_data = json.loads(data)
                     
-                    # Check if record already exists
-                    with self._get_connection() as conn:
-                        with conn.cursor() as cursor:
-                            cursor.execute(
-                                "SELECT id FROM chat_history WHERE user_id = %s AND level = %s AND actor = %s",
-                                (user_id, level, actor)
-                            )
-                            result = cursor.fetchone()
-                            
-                            if result:
-                                # Update existing record
-                                cursor.execute(
-                                    """
-                                    UPDATE chat_history 
-                                    SET chat_data = %s, updated_at = CURRENT_TIMESTAMP 
-                                    WHERE id = %s
-                                    """,
-                                    (json.dumps(chat_data), result[0])
-                                )
-                            else:
-                                # Insert new record
-                                rows_to_insert.append((user_id, level, actor, json.dumps(chat_data)))
+                    # Add to batch for processing
+                    rows_to_insert.append((user_id, level, actor, json.dumps(chat_data)))
                 
                 except Exception as e:
                     logger.error(f"Error processing key {key}: {str(e)}")
             
-            # Batch insert new records
+            # Perform all database operations in a single connection
             if rows_to_insert:
                 with self._get_connection() as conn:
                     with conn.cursor() as cursor:
-                        execute_values(
-                            cursor,
-                            """
-                            INSERT INTO chat_history (user_id, level, actor, chat_data)
-                            VALUES %s
-                            """,
-                            rows_to_insert
-                        )
+                        # For each row, try to update if exists, otherwise insert
+                        for user_id, level, actor, chat_data_json in rows_to_insert:
+                            cursor.execute(
+                                """
+                                INSERT INTO chat_history (user_id, level, actor, chat_data)
+                                VALUES (%s, %s, %s, %s)
+                                ON CONFLICT (user_id, level, actor) 
+                                DO UPDATE SET chat_data = EXCLUDED.chat_data, updated_at = CURRENT_TIMESTAMP
+                                """,
+                                (user_id, level, actor, chat_data_json)
+                            )
             
             logger.info(f"Successfully backed up {len(all_keys)} chat histories to PostgreSQL")
         
