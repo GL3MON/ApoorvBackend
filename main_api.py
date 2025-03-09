@@ -45,13 +45,7 @@ app = FastAPI(lifespan=lifespan)
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,allow_origins=[
-    "https://enigma.iiitkottayam.ac.in",
-    "http://localhost:3000",
-    "http://192.168.136.131:8080",
-    "http://localhost:8080",
-    "https://gpxf3o1b25kd.share.zrok.io"  # Add this
-],
+    allow_credentials=True,allow_origins=["*"],  # Allow all origins
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
@@ -65,6 +59,24 @@ GAME_KEY = os.getenv("GAME_KEY", "your_game_key_here")
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+# Middleware to log request bodies
+@app.middleware("http")
+async def log_request_body(request, call_next):
+    # Get request body
+    body = b""
+    async for chunk in request.stream():
+        body += chunk
+    
+    # Reassign the stream for downstream use
+    request._body = body
+    
+    # Log the request body
+    logger.info(f"Request body: {body}")
+    
+    # Process the request
+    response = await call_next(request)
+    return response
 
 @app.post("/chat/")
 def chat_with_actor(chat_request: ChatRequest):
@@ -260,6 +272,12 @@ async def submit_score(request: dict):
                 status_code=submit_response.status_code if submit_response is not None else 500,
                 detail=f"Score submission error: {str(exc)}"
             )
+        
+## add a options to handle preflight requests
+@app.options("/chat/")
+async def options_chat():
+    # allow all origins
+    return {"message": "Options request success"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
