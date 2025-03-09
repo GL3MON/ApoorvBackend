@@ -45,8 +45,13 @@ app = FastAPI(lifespan=lifespan)
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://enigma.iiitkottayam.ac.in", "http://localhost:3000", "http://192.168.136.131:8080/", "*"],  # Specific origins
-    allow_credentials=True,
+    allow_credentials=True,allow_origins=[
+    "https://enigma.iiitkottayam.ac.in",
+    "http://localhost:3000",
+    "http://192.168.136.131:8080",
+    "http://localhost:8080",
+    "https://gpxf3o1b25kd.share.zrok.io"  # Add this
+],
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
