@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import httpx
+import math
+import time
+from datetime import datetime
+import pytz
 
 from apoorvbackend.src.logger import logger
 from apoorvbackend.src.llm_handler.handler import Handler as LLMHandler
@@ -148,6 +152,109 @@ async def trigger_backup():
         return {"message": "Backup process initiated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/submit-score")
+async def submit_score(request: dict):
+    """
+    Submit a score to the leaderboard with time-based calculation.
+    
+    1. Authenticates the user with LootLocker guest login
+    2. Calculates a delta score based on time difference
+    3. Gets the current score from leaderboard
+    4. Submits the updated score (current + delta)
+    """
+    player_identifier = request.get("player_identifier", "")
+    if not player_identifier:
+        raise HTTPException(status_code=400, detail="Player identifier is required")
+    
+    # Step 1: Guest login to get session token
+    login_url = "https://api.lootlocker.io/game/v2/session/guest"
+    login_payload = {
+        "game_key": GAME_KEY,
+        "game_version": "0.10.0.0",
+        "player_identifier": "username_1"
+    }
+    login_headers = {"Content-Type": "application/json"}
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            login_response = await client.post(login_url, json=login_payload, headers=login_headers)
+            login_response.raise_for_status()
+            login_data = login_response.json()
+            session_token = login_data.get("session_token", "")
+            
+            if not session_token:
+                raise HTTPException(status_code=500, detail="Failed to obtain session token")
+                
+            # player_id = login_data.get("player_id", "")
+            
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=login_response.status_code if login_response is not None else 500,
+                detail=f"Login error: {str(exc)}"
+            )
+    
+    # Step 2: Calculate time-based delta score    
+    
+    # Set reference time (11:30 AM 9th March 2025 IST)
+    ist = pytz.timezone('Asia/Kolkata')
+    reference_time = datetime(2025, 3, 9, 11, 30, 0, tzinfo=ist)
+    reference_epoch = reference_time.timestamp()
+    
+    # Get current time in epoch
+    current_epoch = time.time()
+    
+    # Calculate time difference
+    tdelta = abs(current_epoch - reference_epoch)
+    
+    # Calculate delta score using e^(-alpha * tdelta)
+    # Using alpha = 0.0001 as an example - adjust as needed
+    alpha = 0.0001
+    delta_score = math.exp(-alpha * tdelta)
+    # Scale the score to make it more meaningful
+    delta_score = round(delta_score * 1000)
+    
+    # Step 3: Get current score from leaderboard
+    get_member_url = f"https://api.lootlocker.io/game/leaderboards/twistedtalesleaderboardidtest/member/{player_identifier}"
+    headers = {"x-session-token": session_token}
+    
+    current_score = 0
+    async with httpx.AsyncClient() as client:
+        try:
+            member_response = await client.get(get_member_url, headers=headers)
+            # If the player exists on the leaderboard, get their current score
+            if member_response.status_code == 200:
+                member_data = member_response.json()
+                current_score = member_data.get("score", 0)
+        except httpx.HTTPError:
+            # If there's an error or player doesn't exist yet, assume score is 0
+            logger.info(f"Player {player_identifier} not found on leaderboard, using score 0")
+    
+    # Step 4: Submit updated score
+    new_score = current_score + delta_score
+    submit_url = "https://api.lootlocker.io/game/leaderboards/twistedtalesleaderboardidtest/submit"
+    submit_payload = {
+        "member_id": player_identifier,
+        "score": new_score,
+        "metadata": "test_run"
+    }
+    async with httpx.AsyncClient() as client:
+        try:
+            submit_response = await client.post(submit_url, json=submit_payload, headers=headers)
+            submit_response.raise_for_status()
+            submit_data = submit_response.json()
+            return {
+                "success": True, 
+                "previous_score": current_score,
+                "delta_score": delta_score,
+                "new_score": new_score,
+                "leaderboard_data": submit_data
+            }
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=submit_response.status_code if submit_response is not None else 500,
+                detail=f"Score submission error: {str(exc)}"
+            )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
